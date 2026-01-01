@@ -3,23 +3,23 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/fatih/color"
 	"github.com/ismailtsdln/CapXray/internal/analysis"
+	"github.com/ismailtsdln/CapXray/internal/api"
 	"github.com/ismailtsdln/CapXray/internal/core"
 	"github.com/ismailtsdln/CapXray/internal/detect"
-	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
-var detectCmd = &cobra.Command{
-	Use:   "detect [pcap file]",
-	Short: "Run threat detection on a PCAP file",
+var serverCmd = &cobra.Command{
+	Use:   "server [pcap file]",
+	Short: "Start web server with real-time analysis dashboard",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		pcapFile := string(args[0])
+		pcapFile := args[0]
 		rulesPath, _ := cmd.Flags().GetString("rules")
+		port, _ := cmd.Flags().GetInt("port")
 
 		engine := core.NewEngine()
 		rules, err := core.LoadRules(rulesPath)
@@ -28,7 +28,7 @@ var detectCmd = &cobra.Command{
 		}
 		engine.Rules = rules
 
-		// Register analyzers
+		// Register all analyzers
 		engine.RegisterAnalyzer(analysis.NewDNSAnalyzer(rules))
 		engine.RegisterAnalyzer(analysis.NewHTTPAnalyzer(rules))
 		engine.RegisterAnalyzer(analysis.NewTLSAnalyzer(rules))
@@ -37,35 +37,21 @@ var detectCmd = &cobra.Command{
 		engine.RegisterAnalyzer(detect.NewTunnelingAnalyzer(rules))
 		engine.RegisterAnalyzer(detect.NewAnomalyDetector(rules))
 
-		color.Green("[*] Running detection on %s...", pcapFile)
+		color.Green("[*] Analyzing PCAP: %s", pcapFile)
 		err = engine.Run(context.Background(), pcapFile)
 		if err != nil {
 			return err
 		}
 
-		if len(engine.Alerts) == 0 {
-			color.Yellow("[+] No threats detected.")
-			return nil
-		}
+		color.Green("[+] Analysis complete. Starting web server...")
 
-		color.Red("[!] Alerts detected: %d", len(engine.Alerts))
-		table := tablewriter.NewWriter(os.Stdout)
-		table.Header("Type", "Severity", "Source", "Destination", "Description")
-		for _, a := range engine.Alerts {
-			table.Append(
-				a.Type,
-				a.Severity,
-				a.Source,
-				a.Destination,
-				a.Description,
-			)
-		}
-
-		table.Render()
-		return nil
+		// Start API server
+		server := api.NewServer(engine, port)
+		return server.Start()
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(detectCmd)
+	serverCmd.Flags().Int("port", 8080, "HTTP server port")
+	rootCmd.AddCommand(serverCmd)
 }
