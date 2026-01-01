@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/ismailtsdln/CapXray/internal/analysis"
 	"github.com/ismailtsdln/CapXray/internal/core"
 	"github.com/ismailtsdln/CapXray/internal/detect"
@@ -35,27 +36,28 @@ var detectCmd = &cobra.Command{
 		engine.RegisterAnalyzer(detect.NewPortscanAnalyzer(rules))
 		engine.RegisterAnalyzer(detect.NewTunnelingAnalyzer(rules))
 
-		fmt.Printf("[*] Running detection on %s...\n", pcapFile)
+		color.Green("[*] Running detection on %s...", pcapFile)
 		err = engine.Run(context.Background(), pcapFile)
 		if err != nil {
 			return err
 		}
 
 		if len(engine.Alerts) == 0 {
-			fmt.Println("[+] No threats detected.")
+			color.Yellow("[+] No threats detected.")
 			return nil
 		}
 
+		color.Red("[!] Alerts detected: %d", len(engine.Alerts))
 		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"Type", "Severity", "Source", "Destination", "Description"})
+		table.Header("Type", "Severity", "Source", "Destination", "Description")
 		for _, a := range engine.Alerts {
-			table.Append([]string{
+			table.Append(
 				a.Type,
 				a.Severity,
 				a.Source,
 				a.Destination,
 				a.Description,
-			})
+			)
 		}
 
 		table.Render()

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/fatih/color"
 	"github.com/ismailtsdln/CapXray/internal/core"
 	"github.com/spf13/cobra"
 )
@@ -23,14 +24,14 @@ var scanCmd = &cobra.Command{
 		}
 		engine.Rules = rules
 
-		fmt.Printf("[*] Scanning %s...\n", pcapFile)
+		color.Green("[*] Scanning %s...", pcapFile)
 		err = engine.Run(context.Background(), pcapFile)
 		if err != nil {
 			return err
 		}
 
 		summary := engine.GetSummary()
-		fmt.Printf("[+] Scan complete. Total flows: %v, Alerts: %v\n", summary["total_flows"], summary["total_alerts"])
+		color.Green("[+] Scan complete. Total flows: %v, Alerts: %v", summary["total_flows"], summary["total_alerts"])
 		return nil
 	},
 }
