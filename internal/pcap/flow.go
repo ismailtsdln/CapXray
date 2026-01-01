@@ -3,7 +3,7 @@ package pcap
 import (
 	"sync"
 
-	"github.com/ismailtasdelen/CapXray/pkg/models"
+	"github.com/ismailtsdln/CapXray/pkg/models"
 )
 
 // FlowReconstructor manages the state of active flows

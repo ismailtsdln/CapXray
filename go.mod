@@ -1,4 +1,4 @@
-module github.com/ismailtasdelen/CapXray
+module github.com/ismailtsdln/CapXray
 
 go 1.25.5
 

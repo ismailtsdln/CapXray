@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/ismailtasdelen/CapXray/internal/pcap"
-	"github.com/ismailtasdelen/CapXray/pkg/models"
+	"github.com/ismailtsdln/CapXray/internal/pcap"
+	"github.com/ismailtsdln/CapXray/pkg/models"
 )
 
 // Analyzer is the interface for all analysis modules

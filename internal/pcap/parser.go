@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"github.com/ismailtasdelen/CapXray/pkg/models"
+	"github.com/ismailtsdln/CapXray/pkg/models"
 )
 
 // Parser handles packet decoding
