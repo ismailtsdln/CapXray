@@ -85,15 +85,15 @@ func (t *TLSAnalyzer) Analyze(flow *models.Flow) []models.Alert {
 // computeJA3 generates JA3 fingerprint from TLS Client Hello
 func computeJA3(payload []byte) (string, string) {
 	// Use the ja3 library to compute the fingerprint
-	bareJA3 := ja3.BareToDigestHex(payload)
-	if bareJA3 == "" {
+	j, err := ja3.ComputeJA3FromSegment(payload)
+	if err != nil {
 		return "", ""
 	}
 
-	// Also compute the full JA3 string for reference
-	ja3String := ja3.Bare(payload)
+	ja3Hash := j.GetJA3Hash()
+	ja3String := j.GetJA3String()
 
-	return bareJA3, ja3String
+	return ja3Hash, ja3String
 }
 
 // isSuspiciousJA3 checks if a JA3 hash is known to be malicious

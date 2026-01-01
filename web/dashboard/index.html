@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CapXray Dashboard - Real-time PCAP Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
+        }
+        .live-indicator {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="min-h-screen p-6">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+                        🧠 CapXray Dashboard
+                    </h1>
+                    <p class="text-gray-400 mt-2">Real-time Network Traffic Analysis & Threat Detection</p>
+                </div>
+                <div class="flex items-center gap-3 bg-gray-800 px-4 py-2 rounded-lg live-indicator">
+                    <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="text-sm font-medium">LIVE</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-6 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-100 text-sm mb-1">Total Flows</p>
+                        <p class="text-3xl font-bold" id="total-flows">0</p>
+                    </div>
+                    <i data-lucide="activity" class="w-12 h-12 text-blue-200"></i>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-red-500 to-red-700 rounded-xl p-6 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-red-100 text-sm mb-1">Alerts</p>
+                        <p class="text-3xl font-bold" id="total-alerts">0</p>
+                    </div>
+                    <i data-lucide="alert-triangle" class="w-12 h-12 text-red-200"></i>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-xl p-6 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-100 text-sm mb-1">Protocols</p>
+                        <p class="text-3xl font-bold" id="protocol-count">0</p>
+                    </div>
+                    <i data-lucide="layers" class="w-12 h-12 text-green-200"></i>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl p-6 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-purple-100 text-sm mb-1">Analyzers</p>
+                        <p class="text-3xl font-bold" id="analyzer-count">0</p>
+                    </div>
+                    <i data-lucide="zap" class="w-12 h-12 text-purple-200"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Alerts Table -->
+            <div class="bg-gray-800 rounded-xl p-6 shadow-xl">
+                <div class="flex items-center gap-3 mb-4">
+                    <i data-lucide="shield-alert" class="w-6 h-6 text-red-400"></i>
+                    <h2 class="text-xl font-bold">Threat Alerts</h2>
+                </div>
+                <div class="overflow-auto max-h-96">
+                    <table class="w-full text-sm">
+                        <thead class="text-left border-b border-gray-700">
+                            <tr>
+                                <th class="pb-3">Type</th>
+                                <th class="pb-3">Severity</th>
+                                <th class="pb-3">Source</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alerts-tbody" class="text-gray-300">
+                            <tr>
+                                <td colspan="3" class="py-8 text-center text-gray-500">No alerts detected</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Protocol Distribution -->
+            <div class="bg-gray-800 rounded-xl p-6 shadow-xl">
+                <div class="flex items-center gap-3 mb-4">
+                    <i data-lucide="pie-chart" class="w-6 h-6 text-blue-400"></i>
+                    <h2 class="text-xl font-bold">Protocol Distribution</h2>
+                </div>
+                <div id="protocol-chart" class="space-y-3"></div>
+            </div>
+
+            <!-- Recent Flows -->
+            <div class="bg-gray-800 rounded-xl p-6 shadow-xl lg:col-span-2">
+                <div class="flex items-center gap-3 mb-4">
+                    <i data-lucide="network" class="w-6 h-6 text-green-400"></i>
+                    <h2 class="text-xl font-bold">Recent Network Flows</h2>
+                </div>
+                <div class="overflow-auto max-h-96">
+                    <table class="w-full text-sm">
+                        <thead class="text-left border-b border-gray-700">
+                            <tr>
+                                <th class="pb-3">Source</th>
+                                <th class="pb-3">Destination</th>
+                                <th class="pb-3">Protocol</th>
+                                <th class="pb-3">Packets</th>
+                                <th class="pb-3">Bytes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="flows-tbody" class="text-gray-300">
+                            <tr>
+                                <td colspan="5" class="py-8 text-center text-gray-500">Loading flows...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const API_BASE = 'http://localhost:8080/api';
+
+        async function fetchStats() {
+            try {
+                const res = await fetch(`${API_BASE}/stats`);
+                const data = await res.json();
+                
+                document.getElementById('total-flows').textContent = data.summary.total_flows || 0;
+                document.getElementById('total-alerts').textContent = data.summary.total_alerts || 0;
+                document.getElementById('analyzer-count').textContent = data.summary.analyzer_count || 0;
+                document.getElementById('protocol-count').textContent = Object.keys(data.protocols || {}).length;
+
+                // Update protocol chart
+                updateProtocolChart(data.protocols || {});
+            } catch (err) {
+                console.error('Failed to fetch stats:', err);
+            }
+        }
+
+        async function fetchAlerts() {
+            try {
+                const res = await fetch(`${API_BASE}/alerts`);
+                const data = await res.json();
+                
+                const tbody = document.getElementById('alerts-tbody');
+                if (!data.alerts || data.alerts.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="py-8 text-center text-gray-500">No alerts detected</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.alerts.slice(0, 10).map(alert => `
+                    <tr class="border-b border-gray-700">
+                        <td class="py-3">${alert.type}</td>
+                        <td class="py-3">
+                            <span class="px-2 py-1 rounded text-xs ${getSeverityClass(alert.severity)}">
+                                ${alert.severity}
+                            </span>
+                        </td>
+                        <td class="py-3 font-mono text-xs">${alert.source}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to fetch alerts:', err);
+            }
+        }
+
+        async function fetchFlows() {
+            try {
+                const res = await fetch(`${API_BASE}/flows`);
+                const data = await res.json();
+                
+                const tbody = document.getElementById('flows-tbody');
+                if (!data.flows || data.flows.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-gray-500">No flows found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.flows.slice(0, 15).map(flow => `
+                    <tr class="border-b border-gray-700 hover:bg-gray-700/50">
+                        <td class="py-3 font-mono text-xs">${flow.src_ip}:${flow.src_port}</td>
+                        <td class="py-3 font-mono text-xs">${flow.dst_ip}:${flow.dst_port}</td>
+                        <td class="py-3">
+                            <span class="px-2 py-1 bg-blue-900/50 rounded text-xs">${flow.protocol}</span>
+                        </td>
+                        <td class="py-3">${flow.packet_count}</td>
+                        <td class="py-3">${formatBytes(flow.byte_count)}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to fetch flows:', err);
+            }
+        }
+
+        function updateProtocolChart(protocols) {
+            const chart = document.getElementById('protocol-chart');
+            const total = Object.values(protocols).reduce((a, b) => a + b, 0);
+            
+            if (total === 0) {
+                chart.innerHTML = '<p class="text-gray-500 text-center py-8">No protocol data</p>';
+                return;
+            }
+
+            chart.innerHTML = Object.entries(protocols).map(([proto, count]) => {
+                const percent = (count / total * 100).toFixed(1);
+                return `
+                    <div>
+                        <div class="flex justify-between mb-1 text-sm">
+                            <span>${proto}</span>
+                            <span class="text-gray-400">${count} (${percent}%)</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getSeverityClass(severity) {
+            const classes = {
+                'Critical': 'bg-red-900/50 text-red-200',
+                'High': 'bg-orange-900/50 text-orange-200',
+                'Medium': 'bg-yellow-900/50 text-yellow-200',
+                'Low': 'bg-blue-900/50 text-blue-200'
+            };
+            return classes[severity] || 'bg-gray-900/50 text-gray-200';
+        }
+
+        function formatBytes(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Auto-refresh every 3 seconds
+        function refreshAll() {
+            fetchStats();
+            fetchAlerts();
+            fetchFlows();
+        }
+
+        refreshAll();
+        setInterval(refreshAll, 3000);
+    </script>
+</body>
+</html>

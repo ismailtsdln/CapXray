@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -37,6 +39,9 @@ func (s *Server) Start() error {
 	mux.HandleFunc("/api/alerts", s.handleAlerts)
 	mux.HandleFunc("/api/stats", s.handleStats)
 	mux.HandleFunc("/api/health", s.handleHealth)
+
+	// Serve dashboard
+	mux.HandleFunc("/", s.handleDashboard)
 
 	// CORS middleware
 	handler := s.enableCORS(mux)
@@ -153,4 +158,23 @@ func (s *Server) enableCORS(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// handleDashboard serves the web UI
+func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Serve the dashboard HTML
+	dashboardPath := filepath.Join("web", "dashboard", "index.html")
+	if _, err := os.Stat(dashboardPath); os.IsNotExist(err) {
+		// Fallback to embedded simple message
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `<html><body><h1>CapXray API Server</h1><p>Dashboard not found. API available at /api/*</p></body></html>`)
+		return
+	}
+
+	http.ServeFile(w, r, dashboardPath)
 }
