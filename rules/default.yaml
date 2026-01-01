@@ -1,0 +1,12 @@
+dns:
+  max_domain_length: 60
+  entropy_threshold: 4.5
+beaconing:
+  min_hits: 10
+  max_jitter: 5s
+http:
+  suspicious_uas:
+    - "sqlmap"
+    - "nmap"
+    - "gobuster"
+    - "dirb"
